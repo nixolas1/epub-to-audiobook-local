@@ -7,3 +7,4 @@ numpy
 soundfile
 argparse
 requests
+num2words
