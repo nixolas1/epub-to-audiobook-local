@@ -57,10 +57,13 @@ def convert_chapter(chapter_path, chapter_paragraphs, voice_url):
 ########################################################################
 
 
-def styletts2(text, diffusion_steps=8, voice_url=False, embedding_scale=1.2, alpha=0.25, beta=0.6, seed=69):
+def styletts2(text, diffusion_steps=8, voice_url="reference_voice.wav", embedding_scale=1.2, alpha=0.25, beta=0.6, seed=69):
     url = "http://localhost:5000/predictions"
     # replace numbers with text
+
     text = re.sub(r'\b[\d,]+\b', lambda x: num2words(int(x.group().replace(",", ""))), text)
+    text = text.replace("+", " plus ")
+    text = text.replace("%", " percent ")
     data = {
         "input": {
             "text": text,
