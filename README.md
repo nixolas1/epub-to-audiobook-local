@@ -12,7 +12,7 @@ Epub to MB4 Audiobook, with StyleTTS2 via local TTS api
 
 * Install all dependencies, as needed: `pip install -r requirements.txt`. Also make sure you have ffmpeg installed!
 
-* Run a local StyleTTS2 server using ` docker run -d -p 5000:5000 --gpus=all r8.im/adirik/styletts2@sha256:dd4d03b097968361dda9b0563716eb0758d1d5b8aeb890d22bd08634e2bd069c`
+* Run a local StyleTTS2 server using ` docker run -d -p 5000:5000 --gpus=all nixolas1/styletts2-api`
 
 * Run using `python3 epub-to-audiobook-hf.py <filename-of-epub> --voice reference_voice.wav`
 

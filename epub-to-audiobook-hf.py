@@ -1,31 +1,25 @@
 #!/usr/bin/env python3
 
+import argparse
+import base64
+import json
+import os
 import re
+import signal
+import socket
 import sys
+import threading
+import time
+from http.server import HTTPServer, SimpleHTTPRequestHandler
 from pathlib import Path
 from typing import List, Tuple
-import os
-import time
-import argparse
-
-from m4b_util.helpers import Audiobook
 
 import ebooklib
-from ebooklib import epub
-
-from bs4 import BeautifulSoup
-from natsort import natsorted
-
 import requests
-import json
-import base64
-
-from http.server import HTTPServer, SimpleHTTPRequestHandler
-import socket
-import threading
-import signal
-
-import re
+from bs4 import BeautifulSoup
+from ebooklib import epub
+from m4b_util.helpers import Audiobook
+from natsort import natsorted
 from num2words import num2words
 
 
@@ -59,11 +53,7 @@ def convert_chapter(chapter_path, chapter_paragraphs, voice_url):
 
 def styletts2(text, diffusion_steps=8, voice_url="reference_voice.wav", embedding_scale=1.2, alpha=0.25, beta=0.6, seed=69):
     url = "http://localhost:5000/predictions"
-    # replace numbers with text
-
-    text = re.sub(r'\b[\d,]+\b', lambda x: num2words(int(x.group().replace(",", ""))), text)
-    text = text.replace("+", " plus ")
-    text = text.replace("%", " percent ")
+    text = sanitize_text(text)
     data = {
         "input": {
             "text": text,
@@ -96,6 +86,20 @@ def styletts2(text, diffusion_steps=8, voice_url="reference_voice.wav", embeddin
 ########################################################################
 # Serve voice reference file for Docker image to use
 ########################################################################
+
+
+def sanitize_text(text) -> str:
+    # roman number 2 -> number
+    text = re.sub(r'\bII\b', '2', text)
+    text = re.sub(r'\bIII\b', '3', text)
+    text = re.sub(r'\bIV\b', '4', text)
+    text = re.sub(r'\bV\b', '5', text)
+
+    # 123 -> onehundred-twenty-three
+    text = re.sub(r'\b[\d,]+\b', lambda x: num2words(int(x.group().replace(",", ""))), text)
+    text = text.replace("+", " plus ")
+    text = text.replace("%", " percent ")
+    return text
 
 
 def serve_file(filename):
@@ -237,8 +241,6 @@ def generate_audiobook(epub_filename, voice_type):
 
     chapter_num = 0
 
-    chapter_folders = []
-
     print('Converting Chapters using StyleTTS 2, via local StyleTTS2 server')
 
     for chapter in chapters:
@@ -248,10 +250,6 @@ def generate_audiobook(epub_filename, voice_type):
         if chapter_title != 'temp' and chapter_title != '':
 
             chapter_num += 1
-
-            #if chapter_num == 3:
-            #    break
-
             safe_chapter_title = sanitize_title(chapter_title)
             chapter_path = safe_title+'/'+str(chapter_num)+' - '+safe_chapter_title+'.mp3'
 
